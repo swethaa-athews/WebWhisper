@@ -1,0 +1,2327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Voice Navigator - WebWhisphers</title>
+  <style>
+    body {
+      font-family: Arial;
+      text-align: center;
+      padding: 20px;
+      background: url("background.png") no-repeat top center fixed;
+background-size: cover;
+      color: white;
+      margin: 0;
+      min-height: 100vh;
+    }
+    h1 {
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+    }
+    #status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      max-width: 300px;
+      z-index: 1000;
+    }
+    #user-info {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.7);
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 14px;
+      max-width: 200px;
+      z-index: 1000;
+    }
+    .listening {
+      background: rgba(76, 175, 80, 0.9) !important;
+    }
+    .processing {
+      background: rgba(33, 150, 243, 0.9) !important;
+    }
+    .speaking {
+      background: rgba(156, 39, 176, 0.9) !important;
+    }
+    .waiting-input {
+      background: rgba(255, 193, 7, 0.9) !important;
+    }
+    .pulse {
+      animation: pulse-animation 1.5s infinite;
+    }
+    #results, #cart, #checkout, #delivery-form, #payment-form, #order-confirmation, #order-status-display, #single-order-display {
+      margin-top: 80px;
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 12px;
+      display: block;
+      width: 95%;
+      max-width: 1400px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
+      backdrop-filter: blur(10px);
+    }
+    h3 { margin: 5px 0; }
+    .product {
+      margin-bottom: 20px;
+      padding: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+    }
+    .product img {
+      max-width: 200px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .products-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+      width: 100%;
+    }
+    #help-btn {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: rgba(0,0,0,0.7);
+      color: white;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 24px;
+      z-index: 1000;
+    }
+    #help-modal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.95);
+      padding: 20px;
+      border-radius: 12px;
+      width: 80%;
+      max-width: 600px;
+      z-index: 10000;
+      display: none;
+      color: white;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+    #overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      z-index: 9999;
+      display: none;
+    }
+    .command-list {
+      text-align: left;
+      margin-top: 15px;
+      list-style-type: none;
+      padding: 0;
+    }
+    .command-list li {
+      margin-bottom: 15px;
+      padding: 10px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 5px;
+      border-left: 3px solid #1d291e;
+    }
+    .close-btn {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    @keyframes pulse-animation {
+      0% { box-shadow: 0 0 0 0 rgba(9, 14, 9, 0.7); }
+      70% { box-shadow: 0 0 0 20px rgba(76, 175, 80, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
+    }
+    .instruction {
+      background: rgba(0,0,0,0.6);
+      padding: 10px;
+      border-radius: 8px;
+      margin: 15px auto;
+      width: 80%;
+      max-width: 500px;
+      position: relative;
+      z-index: 1;
+    }
+    .checkout-section {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      margin: 15px 0;
+      border-radius: 8px;
+      border-left: 4px solid #171c18;
+    }
+    .auth-section {
+      margin-top: 80px;
+      background: rgba(0,0,0,0.6);
+      padding: 20px;
+      border-radius: 12px;
+      display: block;
+      width: 95%;
+      max-width: 500px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .logout-btn {
+      background: rgba(27, 19, 19, 0.7);
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .form-group {
+      margin-bottom: 15px;
+      text-align: left;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 10px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      background: rgba(255, 255, 255, 0.9);
+      color: #333;
+      box-sizing: border-box;
+    }
+    .form-buttons {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+    }
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-primary {
+      background: #181e18;
+      color: white;
+    }
+    .btn-secondary {
+      background: #666;
+      color: white;
+    }
+    .btn-danger {
+      background: #12100f;
+      color: white;
+    }
+    .payment-methods {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 15px 0;
+    }
+    .payment-method {
+      flex: 1;
+      min-width: 120px;
+      padding: 10px;
+      border: 2px solid #666;
+      border-radius: 5px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .payment-method.selected {
+      border-color: #181f19;
+      background: rgba(76, 175, 80, 0.3);
+    }
+    .voice-hint {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      font-size: 14px;
+      border-left: 3px solid #232924;
+    }
+    #start-btn {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      background: #151e15;
+      color: white;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      z-index: 1000;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .product-image-container {
+      background: white;
+      padding: 10px;
+      border-radius: 8px;
+      display: inline-block;
+    }
+    .product-image-container img {
+      max-height: 200px;
+      width: auto;
+    }
+    .category-badge {
+      background: #121b13;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      display: inline-block;
+      margin-left: 10px;
+    }
+    .summary-box {
+      background: rgba(255,255,255,0.05);
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .field-highlight {
+      background: rgba(76, 175, 80, 0.2);
+      padding: 5px 10px;
+      border-radius: 4px;
+      margin: 5px 0;
+    }
+    .order-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      border: 1px solid #1d271e;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .order-card:hover {
+      transform: scale(1.02);
+      background: rgba(76, 175, 80, 0.2);
+    }
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .order-status {
+      background: #232823;
+      color: white;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+    }
+    .order-details {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .no-orders {
+      text-align: center;
+      padding: 40px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+    }
+    .order-number-badge {
+      background: #FF9800;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-left: 5px;
+    }
+    .product-list {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 5px;
+    }
+    .product-item {
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .product-item:last-child {
+      border-bottom: none;
+    }
+    .order-actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+    .tracking-info {
+      background: rgba(33, 150, 243, 0.2);
+      padding: 10px;
+      border-radius: 5px;
+      margin-top: 10px;
+      border-left: 3px solid #2196F3;
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <h1>WebWhispher : Voice-Controlled E-Commerce</h1>
+  <div class="instruction">Click the green button or anywhere on the page to start voice recognition</div>
+ 
+  <div id="status">Ready - click to start</div>
+  <div id="user-info" style="display: none;"></div>
+  <div id="start-btn">🎤</div>
+
+  <!-- AUTH UI -->
+  <div id="auth" style="display:none;">
+    <div class="auth-section">
+      <h2>Welcome to Voice Shopping</h2>
+      <p>Please choose an option:</p>
+      <div class="form-buttons">
+        <button class="btn btn-primary" onclick="showLoginForm()">Login</button>
+        <button class="btn btn-primary" onclick="showSignupForm()">Sign Up</button>
+        <button class="btn btn-secondary" onclick="continueAsGuest()">Continue as Guest</button>
+      </div>
+    </div>
+  </div>
+ 
+  <div id="login-page" style="display:none;">
+    <div class="auth-section">
+      <h2>Login</h2>
+      <div class="form-group">
+        <label for="login-username">Username:</label>
+        <input type="text" id="login-username" placeholder="Enter your username">
+      </div>
+      <div class="form-group">
+        <label for="login-password">Password:</label>
+        <input type="password" id="login-password" placeholder="Enter your password">
+      </div>
+      <div class="form-buttons">
+        <button class="btn btn-primary" onclick="performLogin()">Login</button>
+        <button class="btn btn-secondary" onclick="showAuthPage()">Back</button>
+      </div>
+      <div id="login-status" class="voice-hint"></div>
+    </div>
+  </div>
+ 
+  <div id="signup-page" style="display:none;">
+  <div class="auth-section">
+    <h2>Sign Up</h2>
+
+    <div class="form-group">
+      <label>Username:</label>
+      <input type="text" id="signup-username">
+    </div>
+
+    <div class="form-group">
+      <label>Password:</label>
+      <input type="password" id="signup-password">
+    </div>
+
+    <div class="form-group">
+      <label>Confirm Password:</label>
+      <input type="password" id="signup-confirm-password">
+    </div>
+
+    <h3>Delivery Details</h3>
+
+    <div class="form-group">
+      <label>Name:</label>
+      <input type="text" id="signup-name">
+    </div>
+
+    <div class="form-group">
+      <label>Phone:</label>
+      <input type="text" id="signup-phone">
+    </div>
+
+    <div class="form-group">
+      <label>Email:</label>
+      <input type="email" id="signup-email">
+    </div>
+
+    <div class="form-group">
+      <label>Address:</label>
+      <textarea id="signup-address"></textarea>
+    </div>
+
+    <div class="form-buttons">
+      <button class="btn btn-primary" onclick="performSignup()">Sign Up</button>
+      <button class="btn btn-secondary" onclick="showAuthPage()">Back</button>
+    </div>
+
+    <div id="signup-status"></div>
+  </div>
+</div>
+ 
+  <div id="results" style="display: none;"><h2>Search Results</h2><p>No products yet.</p></div>
+  <div id="cart" style="display: none;"><h2>Your Cart</h2><p>Cart is empty.</p></div>
+  <div id="checkout" style="display: none;"></div>
+  <div id="delivery-form" style="display: none;"></div>
+  <div id="payment-form" style="display: none;"></div>
+  <div id="order-confirmation" style="display: none;"></div>
+  <div id="order-status-display" style="display: none;"></div>
+  <div id="single-order-display" style="display: none;"></div>
+ 
+  <div id="help-btn">?</div>
+ 
+  <div id="overlay"></div>
+  <div id="help-modal">
+    <span class="close-btn">&times;</span>
+    <h2>📋 Available Voice Commands</h2>
+    <ul class="command-list" id="help-command-list">
+      <!-- Will be populated by JavaScript -->
+    </ul>
+  </div>
+
+  <script>
+    (function() {
+
+      const SUPABASE_URL = "https://rdlnsnlketuvwbfspuvi.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_u92P0eqC_ID3-DYo414z4g_SqlpiIi4";
+
+   
+      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+       async function testConnection() {
+      const { data, error } = await supabase
+        .from('users')
+        .select('*');
+
+      console.log("DATA:", data);
+      console.log("ERROR:", error);
+    }
+
+    testConnection();
+
+      // Check for browser support
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert("Sorry, your browser doesn't support speech recognition. Please try Chrome, Edge, or Safari.");
+        return;
+      }
+
+      // User storage
+      let currentUser = localStorage.getItem("currentUser") || null;
+      let users = JSON.parse(localStorage.getItem("users")) || {};
+
+      // Sample users for testing with more orders
+      if (Object.keys(users).length === 0 || !users['swetha']) {
+        users = {
+          'test': {
+            password: 'test123',
+            orders: [
+              {
+                id: 'ORD12345678',
+                date: new Date(Date.now() - 86400000).toISOString(), // yesterday
+                items: [{
+                  name: "Scientific Talking Calculator Pro",
+                  description: "Advanced scientific calculator with clear voice output. Price: ₹7499",
+                  category: "calculator"
+                }],
+                delivery: {
+                  name: "Test User",
+                  phone: "9876543210",
+                  email: "test@example.com",
+                  address: "123 Test Street, Mumbai"
+                },
+                payment: { method: "Credit Card" },
+                total: 8098.92,
+                status: "Delivered"
+              }
+            ]
+          },
+          'demo': {
+            password: 'demo123',
+            orders: []
+          },
+          'swetha': {
+            password: 'swetha123',
+            orders: [
+              {
+                id: 'ORD51702700',
+                date: new Date().toISOString(),
+                items: [{
+                  name: "Talking Laptop Pro",
+                  description: "15.6-inch laptop with built-in screen reader. Price: ₹54999",
+                  category: "laptop"
+                }],
+                delivery: {
+                  name: "Swetha S",
+                  phone: "9876543210",
+                  email: "swetha@example.com",
+                  address: "Plot.no 50, Padmini nagar, villianur, puducherry - 605110"
+                },
+                payment: { method: "Cash on Delivery" },
+                total: 59398.92,
+                status: "Shipped"
+              },
+              {
+                id: 'ORD50947546',
+                date: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
+                items: [{
+                  name: "Basic Talking Calculator",
+                  description: "Simple talking calculator for basic arithmetic. Price: ₹1999",
+                  category: "calculator"
+                }],
+                delivery: {
+                  name: "Swetha S",
+                  phone: "9876543210",
+                  email: "swetha@example.com",
+                  address: "Plot.no 50, Padmini nagar, villianur, puducherry - 605110"
+                },
+                payment: { method: "Cash on Delivery" },
+                total: 2158.92,
+                status: "Delivered"
+              },
+              {
+                id: 'ORD50064563',
+                date: new Date(Date.now() - 259200000).toISOString(), // 3 days ago
+                items: [{
+                  name: "Scientific Talking Calculator Pro",
+                  description: "Advanced scientific calculator. Price: ₹7499",
+                  category: "calculator"
+                }],
+                delivery: {
+                  name: "Swetha S",
+                  phone: "9876543210",
+                  email: "swetha@example.com",
+                  address: "Plot.no 50, Padmini nagar, villianur, puducherry - 605110"
+                },
+                payment: { method: "Cash on Delivery" },
+                total: 8098.92,
+                status: "Delivered"
+              }
+            ]
+          }
+        };
+        localStorage.setItem("users", JSON.stringify(users));
+      }
+
+      // Product data
+      const products = [
+        // Calculators Category
+        {
+          name: "Scientific Talking Calculator Pro",
+          category: "calculator",
+          keywords: ["scientific", "advanced", "complex", "trigonometry", "statistics"],
+          description: "Advanced scientific calculator with clear voice output for complex calculations, trigonometric functions, and statistical operations. Features large display and adjustable speech volume. Price: ₹7499",
+          image: "Scientific Talking Calculator Pro.jpg"
+        },
+        {
+          name: "Basic Talking Calculator",
+          category: "calculator",
+          keywords: ["basic", "simple", "arithmetic", "elementary"],
+          description: "Simple talking calculator with clear voice announcements for basic arithmetic operations. Perfect for visually impaired users with large buttons and high contrast display. Price: ₹1999",
+          image: "Basic Talking Calculator.jpg"
+        },
+        {
+          name: "Desktop Talking Calculator",
+          category: "calculator",
+          keywords: ["desktop", "large", "loud", "office", "professional"],
+          description: "Large desktop talking calculator with extra-loud speaker and adjustable speech rate. Features memory functions and repeats calculations aloud for verification. Price: ₹3799",
+          image: "Desktop Talking Calculator.jpg"
+        },
+        {
+          name: "Pocket Talking Calculator",
+          category: "calculator",
+          keywords: ["pocket", "portable", "compact", "travel", "small"],
+          description: "Compact portable talking calculator that fits in your pocket. Speaks numbers as you press them and announces final results. Includes protective case and long battery life. Price: ₹2699",
+          image: "Pocket Talking Calculator.jpg"
+        },
+        {
+          name: "Solar Talking Calculator",
+          category: "calculator",
+          keywords: ["solar", "eco-friendly", "green", "battery-free", "environmental"],
+          description: "Eco-friendly solar-powered talking calculator with backup battery. Clear voice output in multiple languages and automatic power-saving mode. Never needs charging in daylight. Price: ₹3199",
+          image: "Solar Talking Calculator.jpg"
+        },
+       
+        // Watches Category
+        {
+          name: "Classic Talking Watch",
+          category: "watch",
+          keywords: ["classic", "traditional", "analog", "elegant", "formal"],
+          description: "Traditional analog-style talking watch that announces time at button press. Features hourly chime, alarm function, and clear English voice output. Water-resistant design. Price: ₹2899",
+          image: "Classic Talking Watch.jpg"
+        },
+        {
+          name: "Digital Talking Watch",
+          category: "watch",
+          keywords: ["digital", "modern", "sport", "stopwatch", "countdown"],
+          description: "Digital display talking watch with large LCD screen and loud speaker. Announces time, date, and alarm settings. Includes stopwatch and countdown timer functions. Price: ₹3499",
+          image: "Digital Talking Watch.jpg"
+        },
+        {
+          name: "Sports Talking Watch",
+          category: "watch",
+          keywords: ["sports", "fitness", "waterproof", "durable", "outdoor"],
+          description: "Rugged sports talking watch with water resistance up to 50 meters. Features lap timer, split timing, and loud voice announcements for athletes. Perfect for running and swimming. Price: ₹3999",
+          image: "Sports Talking Watch.jpg"
+        },
+       
+        // Keyboards Category
+        {
+          name: "Professional Braille Keyboard",
+          category: "keyboard",
+          keywords: ["professional", "full-size", "braille", "tactile", "office"],
+          description: "Full-size tactile Braille keyboard with raised dot patterns on each key for professional typing. Compatible with screen readers and includes programmable function keys. Price: ₹15999",
+          image: "Professional Braille Keyboard.png"
+        },
+        {
+          name: "Compact Braille Keyboard",
+          category: "keyboard",
+          keywords: ["compact", "wireless", "portable", "bluetooth", "travel"],
+          description: "Space-saving Braille keyboard with tactile key markers and wireless connectivity. Features rechargeable battery and works with multiple devices simultaneously. Price: ₹12999",
+          image: "Compact Braille Keyboard.jpg"
+        },
+        {
+          name: "Large Print Keyboard",
+          category: "keyboard",
+          keywords: ["large print", "high contrast", "visibility", "low vision"],
+          description: "Keyboard with large, high-contrast letters for users with low vision. Yellow keys with black letters for maximum visibility. Plug and play USB connection. Price: ₹2499",
+          image: "Large Print Keyboard.jpg"
+        },
+       
+        // Thermometers & Health
+        {
+          name: "Digital Talking Thermometer",
+          category: "health",
+          keywords: ["thermometer", "fever", "temperature", "medical", "health"],
+          description: "Fast-reading digital thermometer that announces temperature in clear voice within 10 seconds. Features fever alert beep and automatic shut-off with memory recall function. Price: ₹1999",
+          image: "Digital Talking Thermometer"
+        },
+        {
+          name: "Talking Blood Pressure Monitor",
+          category: "health",
+          keywords: ["blood pressure", "bp", "health", "medical", "heart"],
+          description: "Automatic blood pressure monitor with voice announcement. Stores up to 90 readings for two users. Includes irregular heartbeat detection and WHO classification. Price: ₹4499",
+          image: "Talking Blood Pressure Monitor.jpg"
+        },
+        {
+          name: "Talking Glucometer",
+          category: "health",
+          keywords: ["glucose", "sugar", "diabetes", "medical", "blood test"],
+          description: "Voice-enabled blood glucose meter for diabetes management. Announces test results clearly. Includes 10 test strips and lancets. Memory stores last 500 readings. Price: ₹3299",
+          image: "Talking Glucometer.jpg"
+        },
+       
+        // Laptops & Computers
+       
+      ];
+     
+      let searchResults = [];
+      let cart = [];
+      let isListening = false;
+      let isSpeaking = false;
+      let currentProductIndex = 0;
+      let checkoutStep = 'none';
+      let deliveryDetails = { name: '', phone: '', email: '', address: '' };
+      let paymentDetails = { method: '', cardNumber: '', expiryDate: '', cvv: '' };
+     
+      // DOM elements
+      const statusEl = document.getElementById('status');
+      const userInfoEl = document.getElementById('user-info');
+      const resultsEl = document.getElementById('results');
+      const cartEl = document.getElementById('cart');
+      const checkoutEl = document.getElementById('checkout');
+      const deliveryFormEl = document.getElementById('delivery-form');
+      const paymentFormEl = document.getElementById('payment-form');
+      const orderConfirmationEl = document.getElementById('order-confirmation');
+      const orderStatusDisplayEl = document.getElementById('order-status-display');
+      const singleOrderDisplayEl = document.getElementById('single-order-display');
+      const helpBtn = document.getElementById('help-btn');
+      const helpModal = document.getElementById('help-modal');
+      const helpCommandList = document.getElementById('help-command-list');
+      const overlay = document.getElementById('overlay');
+      const closeHelp = document.querySelector('.close-btn');
+      const authEl = document.getElementById('auth');
+      const loginPageEl = document.getElementById('login-page');
+      const signupPageEl = document.getElementById('signup-page');
+      const loginStatusEl = document.getElementById('login-status');
+      const signupStatusEl = document.getElementById('signup-status');
+      const startBtn = document.getElementById('start-btn');
+
+      // Initialize recognition
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = "en-US";
+      recognition.maxAlternatives = 1;
+
+      // Help commands list for voice and display
+      const helpCommands = [
+        { command: "login / sign up", description: "Access your account or create new one" },
+        { command: "continue as guest", description: "Shop without an account" },
+        { command: "search for [product]", description: "Find products (e.g., 'search for calculator')" },
+        { command: "calculator / watch / laptop", description: "Direct category search" },
+        { command: "next / previous", description: "Browse through search results" },
+        { command: "read description", description: "Hear full product details" },
+        { command: "add to cart", description: "Add current product to cart" },
+        { command: "view cart / show cart", description: "See your shopping cart" },
+        { command: "clear cart", description: "Remove all items from cart" },
+        { command: "checkout", description: "Start the checkout process" },
+        { command: "delivery / proceed", description: "Continue to delivery details" },
+        { command: "payment / pay", description: "Continue to payment details" },
+        { command: "review order", description: "Review your order before placing" },
+        { command: "go back / back", description: "Go to previous step" },
+        { command: "place order / confirm order", description: "Place your order" },
+        { command: "order status / my orders", description: "See all your orders" },
+        { command: "track [product name]", description: "Track specific order by product name" },
+        { command: "track 1st / 2nd order", description: "Track order by number" },
+        { command: "logout", description: "Sign out of your account" },
+        { command: "help", description: "Show this help dialog" }
+      ];
+
+      // Populate help modal
+      function populateHelpModal() {
+        helpCommandList.innerHTML = '';
+        helpCommands.forEach(cmd => {
+          const li = document.createElement('li');
+          li.innerHTML = `<strong>${cmd.command}</strong> - ${cmd.description}`;
+          helpCommandList.appendChild(li);
+        });
+      }
+      populateHelpModal();
+
+      // Enhanced search function
+      function searchProducts(searchTerm) {
+        if (!searchTerm) return [];
+       
+        searchTerm = searchTerm.toLowerCase().trim();
+        console.log("Searching for:", searchTerm);
+       
+        const searchMappings = {
+          'calculator': ['calculator', 'calc', 'calculate', 'computation', 'math'],
+          'watch': ['watch', 'clock', 'time', 'wrist watch'],
+          'keyboard': ['keyboard', 'typing', 'type', 'braille', 'keys'],
+          'laptop': ['laptop', 'computer', 'notebook', 'pc', 'ultrabook'],
+          'health': ['health', 'medical', 'thermometer', 'bp', 'blood', 'glucose', 'sugar', 'diabetes'],
+          'thermometer': ['thermometer', 'temperature', 'fever'],
+          'braille': ['braille', 'tactile', 'blind']
+        };
+       
+        let searchCategory = null;
+        let searchKeywords = [];
+       
+        for (let [category, keywords] of Object.entries(searchMappings)) {
+          if (keywords.some(keyword => searchTerm.includes(keyword))) {
+            searchCategory = category;
+            searchKeywords = keywords;
+            break;
+          }
+        }
+       
+        if (!searchCategory) {
+          searchKeywords = [searchTerm];
+        }
+       
+        const filtered = products.filter(product => {
+          if (searchCategory && product.category === searchCategory) return true;
+          if (searchKeywords.some(keyword => product.name.toLowerCase().includes(keyword))) return true;
+          if (searchKeywords.some(keyword => product.description.toLowerCase().includes(keyword))) return true;
+          if (product.keywords && searchKeywords.some(keyword =>
+            product.keywords.some(k => k.includes(keyword) || keyword.includes(k)))) return true;
+          return false;
+        });
+       
+        return filtered;
+      }
+
+      // Initialize UI
+      function initializeUI() {
+        if (currentUser) {
+          authEl.style.display = 'none';
+          loginPageEl.style.display = 'none';
+          signupPageEl.style.display = 'none';
+          resultsEl.style.display = 'block';
+          userInfoEl.style.display = 'block';
+          userInfoEl.innerHTML = `Welcome, ${currentUser} <button class="logout-btn" onclick="logout()">Logout</button>`;
+          updateStatus(`Logged in as ${currentUser} - click to speak`);
+        } else {
+          authEl.style.display = 'block';
+          loginPageEl.style.display = 'none';
+          signupPageEl.style.display = 'none';
+          resultsEl.style.display = 'none';
+          userInfoEl.style.display = 'none';
+          hideAllSections();
+          updateStatus('Please login or continue as guest');
+        }
+      }
+
+      // Global functions
+      window.showLoginForm = function() {
+        authEl.style.display = 'none';
+        loginPageEl.style.display = 'block';
+        document.getElementById('login-username').value = '';
+        document.getElementById('login-password').value = '';
+        loginStatusEl.innerHTML = '';
+      };
+
+      window.showSignupForm = function() {
+        authEl.style.display = 'none';
+        signupPageEl.style.display = 'block';
+        document.getElementById('signup-username').value = '';
+        document.getElementById('signup-password').value = '';
+        document.getElementById('signup-confirm-password').value = '';
+        signupStatusEl.innerHTML = '';
+        speak("Please enter username, password, then your delivery details including name, phone number, email and address.");
+      };
+
+      window.showAuthPage = function() {
+        authEl.style.display = 'block';
+        loginPageEl.style.display = 'none';
+        signupPageEl.style.display = 'none';
+      };
+
+      window.continueAsGuest = function() {
+        currentUser = 'Guest';
+        initializeUI();
+        speak("Continuing as guest. You can now browse and shop. Try saying 'search for calculator' to see all calculators.");
+      };
+
+      window.performLogin = async function() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+
+  if (!username || !password) {
+    loginStatusEl.innerHTML = '<p style="color:red;">Please enter username and password.</p>';
+    return;
+  }
+
+  // 🔥 FETCH USER FROM SUPABASE
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .single();
+
+  if (error || !data) {
+    loginStatusEl.innerHTML = '<p style="color:red;">User not found.</p>';
+    speak("User not found. Please sign up.");
+    return;
+  }
+
+  // ⚠️ (TEMP: skipping password check for now)
+  currentUser = username;
+  
+
+ 
+
+if (data) {
+  deliveryDetails = {
+    name: data.name,
+    phone: data.phone,
+    email: data.email,
+    address: data.address
+  };
+}
+  localStorage.setItem("currentUser", currentUser);
+
+  initializeUI();
+  loginStatusEl.innerHTML = '';
+  speak(`Welcome back ${username}! Click anywhere on the page to start voice recognition,and speak after you hear the beep sound, say search followed by product name to get your desired products`);
+};
+
+      window.performSignup = async function() {
+
+  const username = document.getElementById('signup-username').value.trim();
+  const password = document.getElementById('signup-password').value;
+  const confirmPassword = document.getElementById('signup-confirm-password').value;
+
+  const name = document.getElementById('signup-name').value;
+  const phone = document.getElementById('signup-phone').value;
+  const email = document.getElementById('signup-email').value;
+  const address = document.getElementById('signup-address').value;
+
+  if (!username || !password || !name || !phone || !email || !address) {
+    signupStatusEl.innerHTML = "<p style='color:red'>Please fill all fields</p>";
+    return;
+  }
+
+  if (password !== confirmPassword) {
+    signupStatusEl.innerHTML = "<p style='color:red'>Passwords do not match</p>";
+    return;
+  }
+
+  const { data, error } = await supabase
+    .from("users")
+    .insert([
+      {
+        username: username,
+        password: password,
+        name: name,
+        phone: phone,
+        email: email,
+        address: address
+      }
+    ]);
+
+  if (error) {
+    signupStatusEl.innerHTML = error.message;
+    return;
+  }
+
+  currentUser = username;
+  localStorage.setItem("currentUser", username);
+
+  deliveryDetails = {
+    name: name,
+    phone: phone,
+    email: email,
+    address: address
+};
+
+  speak("Account created successfully. Your delivery address has been saved.");
+
+  initializeUI();
+};
+      window.logout = function() {
+  currentUser = null;
+  localStorage.removeItem("currentUser");
+  cart = [];
+  initializeUI();
+  speak("You have been logged out successfully");
+};
+
+      function playActivationSound() {
+        try {
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+          gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.1);
+        } catch (e) {
+          console.log("Audio generation failed:", e);
+        }
+      }
+     
+      function updateStatus(message, className = '') {
+        statusEl.textContent = message;
+        statusEl.className = className;
+      }
+     
+      function startRecognition() {
+        if (isSpeaking) {
+          updateStatus('Please wait, speaking...', 'speaking');
+          return;
+        }
+       
+        try {
+          recognition.start();
+          isListening = true;
+          updateStatus('Listening...', 'listening pulse');
+          playActivationSound();
+        } catch (e) {
+          console.warn('Recognition error:', e);
+          setTimeout(() => {
+            try {
+              recognition.start();
+              isListening = true;
+              updateStatus('Listening...', 'listening pulse');
+            } catch (e2) {
+              updateStatus('Click to speak');
+            }
+          }, 300);
+        }
+      }
+
+      function stopRecognition() {
+        try {
+          recognition.stop();
+        } catch (e) {
+          console.warn('Stop error:', e);
+        }
+        isListening = false;
+      }
+
+      function speak(text) {
+        window.speechSynthesis.cancel();
+       
+        return new Promise((resolve) => {
+          const utterance = new SpeechSynthesisUtterance(text);
+          isSpeaking = true;
+          updateStatus('Speaking...', 'speaking');
+         
+          utterance.onend = function() {
+            isSpeaking = false;
+            updateStatus('Click to speak');
+            resolve();
+          };
+         
+          utterance.onerror = function() {
+            isSpeaking = false;
+            updateStatus('Error speaking');
+            resolve();
+          };
+         
+          window.speechSynthesis.speak(utterance);
+        });
+      }
+
+      function calculateCartTotal() {
+        return cart.reduce((total, item) => {
+          const priceMatch = item.description.match(/Price:\s*₹([0-9,]+)/);
+          const price = priceMatch ? parseFloat(priceMatch[1].replace(',', '')) : 0;
+          return total + price;
+        }, 0);
+      }
+
+      function displaySearchResults(products) {
+        hideAllSections();
+        resultsEl.style.display = 'block';
+        searchResults = products;
+        currentProductIndex = 0;
+       
+        if (products.length === 0) {
+          resultsEl.innerHTML = '<h2>Search Results</h2><p>No products found. Try a different search term like "calculator", "watch", "laptop", "keyboard", or "health".</p>';
+          speak("No products found. Try searching for calculator, watch, laptop, keyboard, or health products.");
+          return;
+        }
+       
+        resultsEl.innerHTML = `
+          <h2>Search Results (${products.length} products found)</h2>
+          <p>Showing product ${currentProductIndex + 1} of ${products.length}</p>
+          <div class="products-grid">
+            ${products.map((product, index) => `
+              <div class="product" style="${index === 0 ? 'display: block;' : 'display: none;'}" id="product-${index}">
+                <h3>${product.name} <span class="category-badge">${product.category}</span></h3>
+                <div class="product-image-container">
+                  <img src="${product.image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/200x200?text=Product'">
+                </div>
+                <p>${product.description}</p>
+                <button class="btn btn-primary" onclick="addCurrentToCart(${index})">Add to Cart</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="voice-hint">
+            <p>Voice commands: "next", "previous", "read description", "add to cart"</p>
+          </div>
+        `;
+       
+        speak(`Found ${products.length} products. Now showing: ${products[0].name},say next or previous to browse through the products and say read description to know about the product then say add to cart to buy your desired product`);
+      }
+
+      window.addCurrentToCart = function(index) {
+        const product = searchResults[index];
+        cart.push(product);
+        speak(`${product.name} added to cart.`);
+        updateCartDisplay();
+      };
+
+      function displayCart() {
+        hideAllSections();
+        cartEl.style.display = 'block';
+       
+        if (cart.length === 0) {
+          cartEl.innerHTML = '<h2>Your Cart</h2><p>Your cart is empty.</p>';
+          speak("Your cart is empty.");
+          return;
+        }
+       
+        const total = calculateCartTotal();
+        cartEl.innerHTML = `
+          <h2>Your Cart (${cart.length} items)</h2>
+          ${cart.map((item, index) => {
+            const priceMatch = item.description.match(/Price:\s*₹([0-9,]+)/);
+            const price = priceMatch ? priceMatch[1] : '0';
+            return `
+              <div class="product">
+                <h3>${item.name}</h3>
+                <p>Price: ₹${price}</p>
+              </div>
+            `;
+          }).join('')}
+          <div style="margin-top: 20px; font-size: 1.2em;">
+            <strong>Total: ₹${total.toFixed(2)}</strong>
+          </div>
+          <div class="form-buttons">
+            <button class="btn btn-primary" onclick="startCheckout()">Checkout</button>
+            <button class="btn btn-danger" onclick="clearCart()">Clear Cart</button>
+          </div>
+          <div class="voice-hint">
+            <p>Say "checkout" to proceed or "clear cart" to remove all items</p>
+          </div>
+        `;
+       
+        speak(`Your cart has ${cart.length} items. Total amount is ₹${total.toFixed(2)}. Say "checkout" to proceed.`);
+      }
+
+      window.startCheckout = function() {
+        if (cart.length === 0) {
+          speak("Your cart is empty.");
+          return;
+        }
+        checkoutStep = 'checkout';
+        displayCheckoutSummary();
+      };
+
+      window.clearCart = function() {
+        cart = [];
+        displayCart();
+        speak("Cart cleared.");
+      };
+
+      function displayCheckoutSummary() {
+        hideAllSections();
+        checkoutEl.style.display = 'block';
+       
+        const total = calculateCartTotal();
+        const tax = total * 0.08;
+        const finalTotal = total + tax;
+
+        checkoutEl.innerHTML = `
+          <h2>Checkout Summary</h2>
+          <div class="summary-box">
+            <h3>Order Items (${cart.length} items)</h3>
+            ${cart.map(item => {
+              const priceMatch = item.description.match(/Price:\s*₹([0-9,]+)/);
+              const price = priceMatch ? priceMatch[1] : '0';
+              return `<div class="field-highlight"><strong>${item.name}</strong> - ₹${price}</div>`;
+            }).join('')}
+          </div>
+         
+          <div class="summary-box">
+            <h3>Order Total</h3>
+            <div class="field-highlight">Subtotal: ₹${total.toFixed(2)}</div>
+            <div class="field-highlight">Tax (8%): ₹${tax.toFixed(2)}</div>
+            <div class="field-highlight"><strong>Total: ₹${finalTotal.toFixed(2)}</strong></div>
+          </div>
+
+          ${currentUser !== "Guest" ? `
+<div class="summary-box">
+    <h3>Delivery Details</h3>
+
+    <div class="field-highlight">
+        <strong>Name:</strong> ${deliveryDetails.name}
+    </div>
+
+    <div class="field-highlight">
+        <strong>Phone:</strong> ${deliveryDetails.phone}
+    </div>
+
+    <div class="field-highlight">
+        <strong>Email:</strong> ${deliveryDetails.email}
+    </div>
+
+    <div class="field-highlight">
+        <strong>Address:</strong> ${deliveryDetails.address}
+    </div>
+</div>
+` : ``}
+         
+          <div class="form-buttons">
+            <button class="btn btn-primary" onclick="proceedToDelivery()">Proceed to Delivery</button>
+            <button class="btn btn-secondary" onclick="displayCart()">Back to Cart</button>
+          </div>
+          <div class="voice-hint">
+            <p>Say "delivery" to continue or "back" to return to cart</p>
+          </div>
+        `;
+       
+        let summary = `Checkout summary. Your cart has ${cart.length} items. `;
+        cart.forEach((item, index) => {
+          const priceMatch = item.description.match(/Price:\s*₹([0-9,]+)/);
+          const price = priceMatch ? priceMatch[1] : '0';
+          summary += `Item ${index + 1}: ${item.name}, price ₹${price}. `;
+        });
+        summary += `Subtotal ₹${total.toFixed(2)}, tax ₹${tax.toFixed(2)}, total ₹${finalTotal.toFixed(2)}. Say "delivery" to continue or "back" to return to cart.`;
+       
+        speak(summary);
+      }
+
+      function proceedToDelivery() {
+
+  if (currentUser !== "Guest") {
+    speak("Using your saved delivery details.");
+    proceedToPayment();
+    return;
+  }
+
+  checkoutStep = "delivery";
+  displayDeliveryForm();
+}
+
+      function displayDeliveryForm() {
+        hideAllSections();
+        deliveryFormEl.style.display = 'block';
+       
+        deliveryFormEl.innerHTML = `
+          <h2>Delivery Details</h2>
+          <div class="summary-box">
+            <div class="form-group">
+              <label>Full Name:</label>
+              <input type="text" id="delivery-name" placeholder="Enter your full name" value="${deliveryDetails.name}">
+            </div>
+            <div class="form-group">
+              <label>Phone Number:</label>
+              <input type="tel" id="delivery-phone" placeholder="Enter your phone number" value="${deliveryDetails.phone}">
+            </div>
+            <div class="form-group">
+              <label>Email:</label>
+              <input type="email" id="delivery-email" placeholder="Enter your email" value="${deliveryDetails.email}">
+            </div>
+            <div class="form-group">
+              <label>Delivery Address:</label>
+              <textarea id="delivery-address" placeholder="Enter your address" rows="3">${deliveryDetails.address}</textarea>
+            </div>
+          </div>
+          <div class="form-buttons">
+            <button class="btn btn-primary" onclick="saveDelivery()">Save & Continue</button>
+            <button class="btn btn-secondary" onclick="displayCheckoutSummary()">Back</button>
+          </div>
+          <div class="voice-hint">
+            <p>After filling, say "save" or "continue". Say "back" to return to checkout</p>
+          </div>
+        `;
+       
+        speak("Please enter your delivery details. You can say each field or use the form. After filling, say 'save' or 'continue'.");
+      }
+
+      window.saveDelivery = function() {
+        const name = document.getElementById('delivery-name').value.trim();
+        const phone = document.getElementById('delivery-phone').value.trim();
+        const email = document.getElementById('delivery-email').value.trim();
+        const address = document.getElementById('delivery-address').value.trim();
+       
+        if (!name || !phone || !email || !address) {
+          speak("Please fill in all fields.");
+          return;
+        }
+       
+        deliveryDetails = { name, phone, email, address };
+        proceedToPayment();
+      };
+
+      function proceedToPayment() {
+        checkoutStep = 'payment';
+        displayPaymentForm();
+      }
+
+      function displayPaymentForm() {
+        hideAllSections();
+        paymentFormEl.style.display = 'block';
+       
+        paymentFormEl.innerHTML = `
+          <h2>Payment Details</h2>
+          <div class="summary-box">
+            <div class="form-group">
+              <label>Payment Method:</label>
+              <div class="payment-methods">
+  <div class="payment-method ${paymentDetails.method === 'Credit Card' ? 'selected' : ''}" onclick="selectPayment('Credit Card')">Credit Card</div>
+
+  <div class="payment-method ${paymentDetails.method === 'Debit Card' ? 'selected' : ''}" onclick="selectPayment('Debit Card')">Debit Card</div>
+
+  <div class="payment-method ${paymentDetails.method === 'Cash on Delivery' ? 'selected' : ''}" onclick="selectPayment('Cash on Delivery')">Cash on Delivery</div>
+
+  <div class="payment-method ${paymentDetails.method === 'GPay' ? 'selected' : ''}" onclick="selectPayment('GPay')">GPay</div>
+
+  <div class="payment-method ${paymentDetails.method === 'PhonePe' ? 'selected' : ''}" onclick="selectPayment('PhonePe')">PhonePe</div>
+
+  <div class="payment-method ${paymentDetails.method === 'Paytm' ? 'selected' : ''}" onclick="selectPayment('Paytm')">Paytm</div>
+</div>
+            </div>
+           
+            <div id="card-details" style="${paymentDetails.method === 'Credit Card' || paymentDetails.method === 'Debit Card' ? '' : 'display: none;'}">
+              <div class="form-group">
+                <label>Card Number:</label>
+                <input type="text" id="payment-card" placeholder="1234 5678 9012 3456" value="${paymentDetails.cardNumber}">
+              </div>
+              <div class="form-group">
+                <label>Expiry (MM/YY):</label>
+                <input type="text" id="payment-expiry" placeholder="MM/YY" value="${paymentDetails.expiryDate}">
+              </div>
+              <div class="form-group">
+                <label>CVV:</label>
+                <input type="text" id="payment-cvv" placeholder="123" value="${paymentDetails.cvv}">
+              </div>
+            </div>
+          </div>
+         
+          <div class="form-buttons">
+    <button class="btn btn-primary" onclick="savePayment()">Confirm Payment</button>
+
+    <button class="btn btn-secondary"
+        onclick="${currentUser === 'Guest' ? 'displayDeliveryForm()' : 'displayCheckoutSummary()'}">
+        Back
+    </button>
+</div>
+
+          <div class="voice-hint">
+            <p>Select payment method and say "confirm" or "continue". Say "back" to return to delivery</p>
+          </div>
+        `;
+       
+        speak("Please select a payment method. You can say credit card, debit card, cash on delivery, GPay, PhonePe, or Paytm.");
+      }
+
+      window.selectPayment = function(method) {
+        paymentDetails.method = method;
+        displayPaymentForm();
+        speak(`${method} selected. Please fill in the card details or say "confirm" to continue.`);
+      };
+
+      window.savePayment = function() {
+        if (!paymentDetails.method) {
+          speak("Please select a payment method.");
+          return;
+
+        }
+       
+        if (paymentDetails.method === 'Credit Card' || paymentDetails.method === 'Debit Card') {
+          const card = document.getElementById('payment-card').value.replace(/\s/g, '');
+          const expiry = document.getElementById('payment-expiry').value;
+          const cvv = document.getElementById('payment-cvv').value;
+         
+          if (!card || !expiry || !cvv) {
+            speak("Please fill in all card details.");
+            return;
+          }
+         
+          paymentDetails.cardNumber = card;
+          paymentDetails.expiryDate = expiry;
+          paymentDetails.cvv = cvv;
+        }
+       
+        showFakePaymentUI();
+      };
+
+      function showFakePaymentUI() {
+  hideAllSections();
+  paymentFormEl.style.display = 'block';
+
+  paymentFormEl.innerHTML = `
+    <h2>Processing Payment</h2>
+    <div class="summary-box" style="text-align:center">
+      <h3 id="payment-status">Opening ${paymentDetails.method}...</h3>
+      <p>Please wait while we connect to secure gateway</p>
+    </div>
+  `;
+
+  speak(`Opening ${paymentDetails.method}`);
+
+  setTimeout(() => {
+    document.getElementById("payment-status").innerText =
+      "Processing payment...";
+  }, 1500);
+
+  setTimeout(() => {
+    document.getElementById("payment-status").innerText =
+      "Verifying...";
+  }, 3000);
+
+  setTimeout(() => {
+    document.getElementById("payment-status").innerHTML =
+      "✅ Payment Successful";
+
+    speak("Payment successful");
+
+    setTimeout(() => {
+      confirmOrder();
+    }, 1500);
+
+  }, 4500);
+}
+
+      function confirmOrder() {
+        checkoutStep = 'confirmation';
+        hideAllSections();
+        orderConfirmationEl.style.display = 'block';
+       
+        const total = calculateCartTotal();
+        const tax = total * 0.08;
+        const finalTotal = total + tax;
+       
+        orderConfirmationEl.innerHTML = `
+          <h2>Order Confirmation - Review Your Details</h2>
+          <div class="summary-box">
+            <h3>Delivery Details:</h3>
+            <div class="field-highlight"><strong>Name:</strong> ${deliveryDetails.name}</div>
+            <div class="field-highlight"><strong>Phone:</strong> ${deliveryDetails.phone}</div>
+            <div class="field-highlight"><strong>Email:</strong> ${deliveryDetails.email}</div>
+            <div class="field-highlight"><strong>Address:</strong> ${deliveryDetails.address}</div>
+          </div>
+         
+          <div class="summary-box">
+            <h3>Payment Method:</h3>
+            <div class="field-highlight"><strong>${paymentDetails.method}</strong></div>
+            ${paymentDetails.method === 'Credit Card' || paymentDetails.method === 'Debit Card' ?
+              `<div class="field-highlight">Card ending in ${paymentDetails.cardNumber.slice(-4)}</div>` : ''}
+          </div>
+         
+          <div class="summary-box">
+            <h3>Order Items (${cart.length} items):</h3>
+            ${cart.map(item => {
+              const priceMatch = item.description.match(/Price:\s*₹([0-9,]+)/);
+              const price = priceMatch ? priceMatch[1] : '0';
+              return `<div class="field-highlight">${item.name} - ₹${price}</div>`;
+            }).join('')}
+          </div>
+         
+          <div class="summary-box">
+            <h3>Total Amount:</h3>
+            <div class="field-highlight">Subtotal: ₹${total.toFixed(2)}</div>
+            <div class="field-highlight">Tax (8%): ₹${tax.toFixed(2)}</div>
+            <div class="field-highlight"><strong>Total: ₹${finalTotal.toFixed(2)}</strong></div>
+          </div>
+         
+          <div class="form-buttons">
+            <button class="btn btn-primary" onclick="placeOrder()">Place Order</button>
+            <button class="btn btn-secondary" onclick="displayPaymentForm()">Back to Payment</button>
+          </div>
+          <div class="voice-hint">
+            <p>Say "place order" to confirm, or "go back" to make changes</p>
+          </div>
+        `;
+       
+        let review = "Please review your order details. ";
+        review += `Delivery: Name ${deliveryDetails.name}. Phone ${deliveryDetails.phone}. Email ${deliveryDetails.email}. Address ${deliveryDetails.address}. `;
+        review += `Payment method: ${paymentDetails.method}. `;
+        if (paymentDetails.method === 'Credit Card' || paymentDetails.method === 'Debit Card') {
+          review += `Card ending in ${paymentDetails.cardNumber.slice(-4)}. `;
+        }
+        review += `Your cart has ${cart.length} items. `;
+        cart.forEach((item, index) => {
+          const priceMatch = item.description.match(/Price:\s*₹([0-9,]+)/);
+          const price = priceMatch ? priceMatch[1] : '0';
+          review += `Item ${index + 1}: ${item.name}, price ₹${price}. `;
+        });
+        review += `Subtotal ₹${total.toFixed(2)}, tax ₹${tax.toFixed(2)}, total ₹${finalTotal.toFixed(2)}. `;
+        review += `Say "place order" to confirm, or "go back" to make changes.`;
+       
+        speak(review);
+      }
+
+      async function placeOrder() {
+  const orderId = 'ORD' + Date.now().toString().slice(-8);
+  const total = calculateCartTotal();
+  const tax = total * 0.08;
+  const finalTotal = total + tax;
+
+  const order = {
+    id: orderId,
+    date: new Date().toISOString(),
+    items: [...cart],
+    delivery: { ...deliveryDetails },
+    payment: { ...paymentDetails },
+    total: finalTotal,
+    status: 'Confirmed'
+  };
+
+  // 🔥 SAVE TO SUPABASE
+  // 🔥 SAVE ORDER AND GET ID
+const { data: orderData, error: orderError } = await supabase
+  .from('orders')
+  .insert([
+    {
+      user_id: null,
+      items: order.items,
+      total: order.total,
+      status: order.status
+    }
+  ])
+  .select();
+
+if (orderError) {
+  console.error("❌ Order Error:", orderError);
+} else {
+  console.log("✅ Order saved:", orderData);
+
+  const savedOrderId = orderData[0].id;
+
+  // 🔥 SAVE DELIVERY DETAILS
+  const { error: deliveryError } = await supabase.from('delivery').insert([
+    {
+      order_id: savedOrderId,
+      name: deliveryDetails.name,
+      phone: deliveryDetails.phone,
+      address: deliveryDetails.address
+    }
+  ]);
+
+  if (deliveryError) {
+    console.error("❌ Delivery Error:", deliveryError);
+  } else {
+    console.log("✅ Delivery saved successfully");
+     // 📧 SEND EMAIL HERE
+  fetch("http://localhost:3000/send-email", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      email: deliveryDetails.email,
+      orderId: orderId,
+      total: finalTotal
+    })
+  })
+  .then(res => res.json())
+  .then(data => console.log("📧 Email sent:", data))
+  .catch(err => console.error("❌ Email error:", err));
+  }
+}
+
+  // ✅ KEEP YOUR EXISTING LOCAL STORAGE (for now)
+  if (currentUser && currentUser !== 'Guest') {
+    if (!users[currentUser]) users[currentUser] = { password: '', orders: [] };
+    users[currentUser].orders = users[currentUser].orders || [];
+    users[currentUser].orders.push(order);
+    localStorage.setItem("users", JSON.stringify(users));
+  }
+
+  // ✅ UI DISPLAY (unchanged)
+  orderConfirmationEl.innerHTML = `
+    <h2>Order Placed Successfully!</h2>
+    <div class="order-summary">
+      <h3>Thank you for your order!</h3>
+      <div class="field-highlight"><strong>Order ID:</strong> ${orderId}</div>
+      <div class="field-highlight"><strong>Total Amount:</strong> ₹${finalTotal.toFixed(2)}</div>
+      <div class="field-highlight">You will receive a confirmation at ${deliveryDetails.email}</div>
+    </div>
+    <div class="form-buttons">
+      <button class="btn btn-primary" onclick="continueShopping()">Continue Shopping</button>
+      <button class="btn btn-secondary" onclick="displayOrderStatus()">View All Orders</button>
+    </div>
+  `;
+
+  // ✅ RESET
+  cart = [];
+checkoutStep = 'none';
+
+// Keep saved delivery details for logged-in users
+if (currentUser === "Guest") {
+    deliveryDetails = {
+        name: '',
+        phone: '',
+        email: '',
+        address: ''
+    };
+}
+
+paymentDetails = {
+    method: '',
+    cardNumber: '',
+    expiryDate: '',
+    cvv: ''
+};
+
+  speak(`Order placed successfully! Your order ID is ${orderId}. Total amount ₹${finalTotal.toFixed(2)}. Thank you for shopping!`);
+}
+
+      window.continueShopping = function() {
+
+    // Hide everything
+    hideAllSections();
+
+    // Clear previous search results
+    searchResults = [];
+    currentProductIndex = 0;
+
+    // Reset the search page
+    resultsEl.style.display = "block";
+    resultsEl.innerHTML = `
+        <h2>Search Results</h2>
+        <p>No products yet.</p>
+    `;
+
+    // Reset checkout state
+    checkoutStep = "none";
+
+    speak("You can continue shopping. Say search followed by the product name. For example, search for calculator, watch, keyboard, laptop, or health products.");
+};
+
+      // Display all orders
+      function displayOrderStatus() {
+        hideAllSections();
+        orderStatusDisplayEl.style.display = 'block';
+       
+        if (!currentUser || currentUser === 'Guest') {
+          orderStatusDisplayEl.innerHTML = `
+            <h2>Order Status</h2>
+            <div class="no-orders">
+              <p>Please login to view your order history.</p>
+              <button class="btn btn-primary" onclick="showLoginForm()">Login</button>
+              <button class="btn btn-secondary" onclick="continueShopping()">Continue Shopping</button>
+            </div>
+          `;
+          speak("Please login to view your order history.");
+          return;
+        }
+       
+        const user = users[currentUser];
+        if (!user || !user.orders || user.orders.length === 0) {
+          orderStatusDisplayEl.innerHTML = `
+            <h2>Order Status</h2>
+            <div class="no-orders">
+              <p>You haven't placed any orders yet.</p>
+              <button class="btn btn-primary" onclick="continueShopping()">Start Shopping</button>
+            </div>
+          `;
+          speak("You haven't placed any orders yet.");
+          return;
+        }
+       
+        // Sort orders by date (newest first)
+        const orders = [...user.orders].reverse();
+       
+        let statusHTML = `
+          <h2>Your Order History</h2>
+          <p>Found ${orders.length} order${orders.length > 1 ? 's' : ''}</p>
+          <div class="voice-hint">
+            <p>To track a specific order, say "track 1st order" or "track [product name]"</p>
+          </div>
+        `;
+       
+        let statusSpeech = `You have ${orders.length} order${orders.length > 1 ? 's' : ''}. `;
+       
+        orders.forEach((order, index) => {
+          const orderNumber = index + 1;
+          const orderDate = new Date(order.date).toLocaleDateString();
+          const productNames = order.items.map(item => item.name).join(', ');
+         
+          statusHTML += `
+            <div class="order-card" onclick="displaySingleOrder(${index})">
+              <div class="order-header">
+                <strong>Order #${order.id} <span class="order-number-badge">#${orderNumber}</span></strong>
+                <span class="order-status">${order.status}</span>
+              </div>
+              <div class="product-list">
+                ${order.items.map(item => `
+                  <div class="product-item">📦 ${item.name}</div>
+                `).join('')}
+              </div>
+              <div class="tracking-info">
+                <strong>Status:</strong> ${order.status} | <strong>Total:</strong> ₹${order.total.toFixed(2)}
+              </div>
+              <div class="order-actions">
+                <button class="btn btn-secondary" onclick="event.stopPropagation(); displaySingleOrder(${index})">Track This Order</button>
+              </div>
+            </div>
+          `;
+         
+          statusSpeech += `Order ${orderNumber}: ${productNames}. Status: ${order.status}. `;
+        });
+       
+        statusHTML += `
+          <div class="form-buttons">
+            <button class="btn btn-primary" onclick="continueShopping()">Continue Shopping</button>
+          </div>
+        `;
+       
+        orderStatusDisplayEl.innerHTML = statusHTML;
+        speak(statusSpeech);
+      }
+
+      // Display single order details
+      function displaySingleOrder(orderIndex) {
+        hideAllSections();
+        singleOrderDisplayEl.style.display = 'block';
+       
+        const user = users[currentUser];
+        const orders = [...user.orders].reverse();
+        const order = orders[orderIndex];
+        const orderNumber = orderIndex + 1;
+       
+        const orderDate = new Date(order.date).toLocaleDateString();
+        const productNames = order.items.map(item => item.name).join(', ');
+       
+        let orderHTML = `
+          <h2>Order Details #${orderNumber}</h2>
+          <div class="order-card">
+            <div class="order-header">
+              <strong>Order ID: ${order.id}</strong>
+              <span class="order-status">${order.status}</span>
+            </div>
+           
+            <div class="summary-box">
+              <h3>Products:</h3>
+              ${order.items.map(item => `
+                <div class="field-highlight">📦 ${item.name}</div>
+              `).join('')}
+            </div>
+           
+            <div class="summary-box">
+              <h3>Delivery Details:</h3>
+              <div class="field-highlight"><strong>Name:</strong> ${order.delivery.name}</div>
+              <div class="field-highlight"><strong>Phone:</strong> ${order.delivery.phone}</div>
+              <div class="field-highlight"><strong>Email:</strong> ${order.delivery.email}</div>
+              <div class="field-highlight"><strong>Address:</strong> ${order.delivery.address}</div>
+            </div>
+           
+            <div class="summary-box">
+              <h3>Payment & Total:</h3>
+              <div class="field-highlight"><strong>Payment Method:</strong> ${order.payment.method}</div>
+              <div class="field-highlight"><strong>Total Amount:</strong> ₹${order.total.toFixed(2)}</div>
+              <div class="field-highlight"><strong>Order Date:</strong> ${orderDate}</div>
+            </div>
+           
+            <div class="tracking-info">
+              <strong>Current Status:</strong> ${order.status}
+              ${order.status === 'Shipped' ? ' - Your order is on the way!' : ''}
+              ${order.status === 'Delivered' ? ' - Order has been delivered.' : ''}
+              ${order.status === 'Confirmed' ? ' - Order has been confirmed.' : ''}
+            </div>
+          </div>
+         
+          <div class="form-buttons">
+            <button class="btn btn-primary" onclick="displayOrderStatus()">Back to All Orders</button>
+            <button class="btn btn-secondary" onclick="continueShopping()">Continue Shopping</button>
+          </div>
+        `;
+       
+        singleOrderDisplayEl.innerHTML = orderHTML;
+       
+        let speech = `Tracking order ${orderNumber}: ${productNames}. Status: ${order.status}. `;
+        speech += `Delivering to ${order.delivery.name} at ${order.delivery.address}. `;
+        speech += `Total amount: ₹${order.total.toFixed(2)}. `;
+       
+        if (order.status === 'Shipped') {
+          speech += 'Your order is on the way!';
+        } else if (order.status === 'Delivered') {
+          speech += 'Order has been delivered.';
+        } else if (order.status === 'Confirmed') {
+          speech += 'Order has been confirmed.';
+        }
+       
+        speak(speech);
+      }
+
+      // Track order by product name or number
+      function trackOrder(searchTerm) {
+        if (!currentUser || currentUser === 'Guest') {
+          speak("Please login to track orders.");
+          return false;
+        }
+       
+        const user = users[currentUser];
+        if (!user || !user.orders || user.orders.length === 0) {
+          speak("You have no orders to track.");
+          return false;
+        }
+       
+        const orders = [...user.orders].reverse();
+        const lowerTerm = searchTerm.toLowerCase().trim();
+       
+        // Check for number-based tracking (1st, 2nd, 3rd, first, second, third)
+        const numberMatch = lowerTerm.match(/(\d+)(?:st|nd|rd|th)?\s*order/) ||
+                           lowerTerm.match(/(first|second|third|fourth|fifth)\s*order/);
+       
+        if (numberMatch) {
+          let orderNum = 1;
+          if (numberMatch[1]) {
+            orderNum = parseInt(numberMatch[1]);
+          } else if (numberMatch[0].includes('first')) {
+            orderNum = 1;
+          } else if (numberMatch[0].includes('second')) {
+            orderNum = 2;
+          } else if (numberMatch[0].includes('third')) {
+            orderNum = 3;
+          } else if (numberMatch[0].includes('fourth')) {
+            orderNum = 4;
+          } else if (numberMatch[0].includes('fifth')) {
+            orderNum = 5;
+          }
+         
+          if (orderNum >= 1 && orderNum <= orders.length) {
+            displaySingleOrder(orderNum - 1);
+            return true;
+          } else {
+            speak(`You only have ${orders.length} orders. Please try again.`);
+            return false;
+          }
+        }
+       
+        // Check for product name tracking
+        for (let i = 0; i < orders.length; i++) {
+          const order = orders[i];
+          for (let j = 0; j < order.items.length; j++) {
+            const item = order.items[j];
+            if (item.name.toLowerCase().includes(lowerTerm) ||
+                lowerTerm.includes(item.name.toLowerCase().split(' ')[0])) {
+              displaySingleOrder(i);
+              return true;
+            }
+          }
+        }
+       
+        // Check for partial matches
+        for (let i = 0; i < orders.length; i++) {
+          const order = orders[i];
+          const allProducts = order.items.map(item => item.name.toLowerCase()).join(' ');
+          if (allProducts.includes(lowerTerm)) {
+            displaySingleOrder(i);
+            return true;
+          }
+        }
+       
+        speak(`No order found with product name "${searchTerm}". Say "order status" to see all orders.`);
+        return false;
+      }
+
+      function hideAllSections() {
+        resultsEl.style.display = 'none';
+        cartEl.style.display = 'none';
+        checkoutEl.style.display = 'none';
+        deliveryFormEl.style.display = 'none';
+        paymentFormEl.style.display = 'none';
+        orderConfirmationEl.style.display = 'none';
+        orderStatusDisplayEl.style.display = 'none';
+        singleOrderDisplayEl.style.display = 'none';
+      }
+
+      function updateCartDisplay() {
+        if (cartEl.style.display === 'block') {
+          displayCart();
+        }
+      }
+
+      // Process voice commands
+      function processCommand(transcript) {
+        const lower = transcript.toLowerCase().trim();
+        console.log("Command:", lower);
+       
+        // Auth commands
+        if (lower.includes('login') || lower === 'log in') {
+          if (currentUser) {
+            speak(`You are already logged in as ${currentUser}`);
+          } else {
+            showLoginForm();
+            speak("Please enter your username and password");
+          }
+          return;
+        }
+       
+        if (lower.includes('sign up') || lower.includes('signup') || lower === 'register') {
+          if (currentUser) {
+            speak(`You are already logged in as ${currentUser}`);
+          } else {
+            showSignupForm();
+            speak("Please enter your details to sign up");
+          }
+          return;
+        }
+       
+        if (lower.includes('continue as guest') || lower.includes('guest')) {
+          if (!currentUser) {
+            continueAsGuest();
+          } else {
+            speak(`You are already logged in as ${currentUser}`);
+          }
+          return;
+        }
+       
+        // ✅ FIXED LOGOUT VOICE COMMAND
+if (
+  lower.includes('logout') ||
+  lower.includes('log out') ||
+  lower.includes('sign out') || lower.includes('logo')
+) {
+  if (currentUser) {
+    logout();
+  } else {
+    speak("You are not logged in");
+  }
+  return;
+}
+        if (!currentUser) {
+          speak("Please login or continue as guest first");
+          return;
+        }
+
+        // Order tracking commands
+        if (lower.includes('track') || lower.includes('where is my') || lower.includes('track order')) {
+          // Extract the search term after "track"
+          let searchTerm = lower.replace(/track|where is my|track order/g, '').trim();
+         
+          if (searchTerm) {
+            trackOrder(searchTerm);
+          } else {
+            // If just "track" is said, show all orders
+            displayOrderStatus();
+          }
+          return;
+        }
+           
+        // Order status command
+        if (lower.includes('order status') || lower.includes('my orders') || lower.includes('order history') || lower.includes('show orders')) {
+          displayOrderStatus();
+          return;
+        }
+
+        // Search commands
+        if (lower.includes('search for') || lower.includes('search') || lower.includes('find') || lower.includes('look for') || lower.includes('show all') || lower.includes('show me')) {
+          let searchTerm = '';
+         
+          if (lower.includes('search for')) {
+            searchTerm = lower.split('search for')[1]?.trim() || '';
+          } else if (lower.includes('search')) {
+            searchTerm = lower.split('search')[1]?.trim() || '';
+          } else if (lower.includes('find')) {
+            searchTerm = lower.split('find')[1]?.trim() || '';
+          } else if (lower.includes('look for')) {
+            searchTerm = lower.split('look for')[1]?.trim() || '';
+          } else if (lower.includes('show all')) {
+            searchTerm = lower.split('show all')[1]?.trim() || '';
+          } else if (lower.includes('show me')) {
+            searchTerm = lower.split('show me')[1]?.trim() || '';
+          }
+         
+          if (!searchTerm) {
+            const commonProducts = ['calculator', 'calculators', 'watch', 'watches', 'laptop', 'laptops', 'keyboard', 'keyboards', 'thermometer', 'health', 'braille'];
+            for (let product of commonProducts) {
+              if (lower.includes(product)) {
+                searchTerm = product;
+                break;
+              }
+            }
+          }
+         
+          if (searchTerm) {
+            searchTerm = searchTerm.replace(/s$/, '');
+            const filtered = searchProducts(searchTerm);
+            displaySearchResults(filtered);
+          } else {
+            displaySearchResults(products);
+            speak("Showing all products. You can also say 'search for calculator' to see only calculators.");
+          }
+          return;
+        }
+
+        // Direct category commands
+        if (lower.includes('calculator') || lower.includes('calculators')) {
+          const filtered = searchProducts('calculator');
+          displaySearchResults(filtered);
+          return;
+        }
+       
+        if (lower.includes('watch') || lower.includes('watches')) {
+          const filtered = searchProducts('watch');
+          displaySearchResults(filtered);
+          return;
+        }
+       
+        if (lower.includes('laptop') || lower.includes('laptops')) {
+          const filtered = searchProducts('laptop');
+          displaySearchResults(filtered);
+          return;
+        }
+       
+        if (lower.includes('keyboard') || lower.includes('keyboards')) {
+          const filtered = searchProducts('keyboard');
+          displaySearchResults(filtered);
+          return;
+        }
+       
+        if (lower.includes('health') || lower.includes('medical') || lower.includes('thermometer')) {
+          const filtered = searchProducts('health');
+          displaySearchResults(filtered);
+          return;
+        }
+
+        // Navigation
+        if ((lower.includes('next') || lower.includes('forward')) && searchResults.length > 0) {
+          if (currentProductIndex < searchResults.length - 1) {
+            currentProductIndex++;
+            document.querySelectorAll('.product').forEach((el, i) => {
+              el.style.display = i === currentProductIndex ? 'block' : 'none';
+            });
+            speak(searchResults[currentProductIndex].name);
+          } else {
+            speak("This is the last product");
+          }
+          return;
+        }
+       
+        if ((lower.includes('previous') || lower.includes('prev')) && searchResults.length > 0) {
+          if (currentProductIndex > 0) {
+            currentProductIndex--;
+            document.querySelectorAll('.product').forEach((el, i) => {
+              el.style.display = i === currentProductIndex ? 'block' : 'none';
+            });
+            speak(searchResults[currentProductIndex].name);
+          } else {
+            speak("This is the first product");
+          }
+          return;
+        }
+
+        if (lower.includes('read description') && searchResults.length > 0) {
+          speak(searchResults[currentProductIndex].description);
+          return;
+        }
+
+        if (lower.includes('add to cart') && searchResults.length > 0) {
+          cart.push(searchResults[currentProductIndex]);
+          speak(`${searchResults[currentProductIndex].name} added to cart,Say view cart to see your cart items`);
+          return;
+        }
+
+        if (lower.includes('view cart') || lower.includes('show cart') || lower.includes('view card') || lower.includes('show card') || lower.includes('view guard') || lower.includes('show kart') || lower.includes('new car') || lower.includes ('view kart') || lower.includes ('you got') || lower.includes ('bhukat') || lower.includes('will guard') || lower.includes ('new cut') || lower.includes ('view cut') || lower.includes ('show cut'))  {
+          displayCart();
+          return;
+        }
+
+        if (lower.includes('clear cart')) {
+          cart = [];
+          displayCart();
+          speak("Cart cleared");
+          return;
+        }
+
+        // Checkout command
+        if (lower.includes('checkout') || lower.includes('check out')) {
+          if (cart.length === 0) {
+            speak("Your cart is empty. Please add items to cart first.");
+          } else {
+            checkoutStep = 'checkout';
+            displayCheckoutSummary();
+          }
+          return;
+        }
+
+        if (lower.includes('cash on delivery') || lower.includes('cod')) {
+  selectPayment('Cash on Delivery');
+  speak("Cash on delivery selected,Say confirm or continue to confirm payment,or say go back for the checkout review");
+  return;
+}
+
+        // Delivery command
+        if (lower.includes('delivery') || lower.includes('proceed') || (lower.includes('continue') && checkoutStep === 'checkout')) {
+          if (checkoutStep === 'checkout') {
+            proceedToDelivery();
+          } else {
+            speak("Please start checkout first by saying 'checkout'");
+          }
+          return;
+        }
+
+        if (
+  lower.includes('gpay') ||
+  lower.includes('g pay') ||
+  lower.includes('google pay')
+) {
+  selectPayment('GPay');
+  speak("GPay selected,Say confirm or continue to confirm payment,or say go back for the checkout review");
+  return;
+}
+
+if (lower.includes('phonepe') || lower.includes('phone pay') || lower.includes('phone bait') || lower.includes('phone pate')  || lower.includes('phone beck') || lower.includes('phone bae')  || lower.includes('bonfire') || lower.includes('fonte') ) {
+  selectPayment('PhonePe');
+  speak("PhonePe selected,Say confirm or continue to confirm payment,or say go back for the checkout review");
+  return;
+}
+
+if (
+  lower.includes('paytm') ||
+  lower.includes('pay tm')
+) {
+  selectPayment('Paytm');
+  speak("Paytm selected,Say confirm or continue to confirm payment,or say go back for the checkout review");
+  return;
+}
+
+if (lower.includes('credit card')) {
+  selectPayment('Credit Card');
+  speak("Credit card selected,Say confirm or continue to confirm payment,or say go back for the checkout review");
+  return;
+}
+
+if (lower.includes('debit card')) {
+  selectPayment('Debit Card');
+  speak("Debit card selected,Say confirm or continue to confirm payment,or say go back for the checkout review");
+  return;
+}
+
+
+
+        // Payment command
+        // ✅ FIXED PAYMENT COMMAND
+if (lower.includes('payment') || lower == 'pay') {
+  if (checkoutStep === 'delivery' || checkoutStep === 'checkout') {
+    proceedToPayment();   // 🔥 FORCE MOVE TO PAYMENT
+    return;
+  } else if (checkoutStep === 'payment') {
+    speak("You are already in payment section");
+    return;
+  } else {
+    speak("Please start checkout first");
+    return;
+  }
+}
+
+        // 🎯 PAYMENT METHOD VOICE COMMANDS
+
+
+
+        // Save/Confirm commands
+        if (lower.includes('save') || lower.includes('confirm') || lower.includes('continue')) {
+          if (checkoutStep === 'delivery') {
+            saveDelivery();
+          } else if (checkoutStep === 'payment') {
+            savePayment();
+           
+           
+          } else if (checkoutStep === 'confirmation') {
+            placeOrder();
+          }
+          return;
+        }
+
+        // Review order command
+        if (lower.includes('review') || lower.includes('review order')) {
+          if (checkoutStep === 'payment') {
+            confirmOrder();
+          } else {
+            speak("Please complete payment details first");
+          }
+          return;
+        }
+
+        // Place order / Confirm order
+        if (lower.includes('place order') || lower.includes('confirm order') || lower.includes('place my order')) {
+          if (checkoutStep === 'confirmation') {
+            placeOrder();
+          } else if (checkoutStep === 'payment') {
+            confirmOrder();
+          } else {
+            speak("Please complete all steps first. Say 'checkout' to begin.");
+          }
+          return;
+        }
+
+        // Go back command
+        if (lower.includes('go back') || (lower.includes('back') && !lower.includes('previous'))) {
+          if (checkoutStep === 'delivery') {
+            displayCheckoutSummary();
+            checkoutStep = 'checkout';
+            speak("Returned to checkout summary");
+          } else if (checkoutStep === 'payment') {
+            displayDeliveryForm();
+            checkoutStep = 'delivery';
+            speak("Returned to delivery details");
+          } else if (checkoutStep === 'confirmation') {
+            displayPaymentForm();
+            checkoutStep = 'payment';
+            speak("Returned to payment details");
+          } else if (checkoutStep === 'checkout') {
+            displayCart();
+            checkoutStep = 'none';
+            speak("Returned to cart");
+          } else {
+            speak("No previous step available");
+          }
+          return;
+        }
+
+        // Help command - reads all commands aloud
+        if (lower.includes('help')) {
+          showHelp();
+          let helpText = "Here are the available voice commands. ";
+          helpCommands.forEach(cmd => {
+            helpText += `${cmd.command}: ${cmd.description}. `;
+          });
+          speak(helpText);
+          return;
+        }
+
+        // If no command matched but it might be a product search
+        const possibleSearch = lower.replace(/^(show|get|find|look|search)/, '').trim();
+        if (possibleSearch && possibleSearch.length > 2) {
+          const filtered = searchProducts(possibleSearch);
+          if (filtered.length > 0) {
+            displaySearchResults(filtered);
+            return;
+          }
+        }
+
+        speak("Command not recognized. Say 'help' for available commands.");
+      }
+   
+      function showHelp() {
+        helpModal.style.display = 'block';
+        overlay.style.display = 'block';
+      }
+
+      // Event listeners
+      closeHelp.addEventListener('click', function() {
+        helpModal.style.display = 'none';
+        overlay.style.display = 'none';
+      });
+
+      overlay.addEventListener('click', function() {
+        helpModal.style.display = 'none';
+        overlay.style.display = 'none';
+      });
+
+      startBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        startRecognition();
+      });
+
+      document.body.addEventListener('click', function(e) {
+        if (e.target === startBtn) return;
+        if (e.target.closest('button') && !e.target.closest('#help-btn')) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (e.target.closest('#help-modal')) return;
+       
+        startRecognition();
+      });
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        stopRecognition();
+        processCommand(transcript);
+      };
+   
+      recognition.onerror = function(event) {
+        console.error("Recognition error:", event.error);
+        isListening = false;
+        updateStatus('Click to speak');
+      };
+   
+      recognition.onend = function() {
+        isListening = false;
+        if (!isSpeaking) {
+          updateStatus('Click to speak');
+        }
+      };
+   
+      helpBtn.addEventListener('click', showHelp);
+   
+      initializeUI();
+      // ✅ CLOSE recognition.onend
+    })();
+  </script>
+</body>
+</html>
